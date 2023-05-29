@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- The head sets a lot of metadata, data the user can't see, but is essential.  -->
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scribble</title>
+</head>
+
+
+<body>
+  <!-- The JavaScript Code -->
+  <script type="module">
+    "use strict"; // This exact string is used to put JS in strict mode.
+    // Strict mode fixes a number of mistakes with JavaScript, and is recommended for all modern JS.
+    
+    
+    function initCanvas() { // This function intializes the canvas when asked to
+
+      // Grabs a COPY of the template that contains the canvas. Otherwise the template would be emptied.
+      const template = document.getElementById('canvasMaker').cloneNode(true);
+      
+      // Grabbing the <main> element fromt the document and putting a reference to it canvasContainer.
+      const canvasContainer = document.getElementById('canvasContainer')
+
+      // Take places the elements from the template in the <main> element
+      canvasContainer.replaceChildren(template.content);
+
+      // Used in debugging
+      console.log("the canvas has been created!");
+      // Grabbing the inputs to the drawing
+      // document.querySelector() and document.getElementById() both return an HTML element.
+      // getElementById() is specialized to finding ids, while queryselctor is slower but much more flexible.
+      const canvasElement = document.querySelector("#scribble");
+
+      // Get the values of the canvas size represented by the user.
+      let userHeight = document.getElementById("canvasSizeY").value
+      let userWidth = document.getElementById("canvasSizeX").value
+      
+
+      // Check if the user specified an invalid value
+      // The code in the comment below does the same thing in as the if statement.
+      // canvasElement.height = userHeight > 1024 || userHeight < 1 ? userHeight : 500;
+      if ((userHeight > 1024) || (userHeight < 1)) {
+        canvasElement.height = 500;
+      }
+      else {
+        canvasElement.height = userHeight;
+      }
+      if ((userWidth > 1024) || (userWidth < 1)) {
+        canvasElement.width = 500;
+      }
+      else {
+        canvasElement.width = userWidth;
+      }
+
+      // Grab the inputs in for drawing
+      const colorInput = document.getElementById("color");
+      const brushSizeInput = document.getElementById("brushSize");
+      const brushType = document.getElementById("radio");
+
+      // Put input into JS variables
+      let color = colorInput.value;
+      let brushSize = brushSizeInput.value;
+
+      // Add listener to update JS if the input changes
+      colorInput.addEventListener('change', () => { color = colorInput.value });
+      brushSizeInput.addEventListener('change', () => { brushSize = brushSizeInput.value });
+
+      // Handling canvas
+      const ctx = canvasElement.getContext('2d');
+      // The canvas is just an HTML element, to do things with it we need to get a context that provides the functions.
+
+      function draw(event) { // A function that takes in a mousemove event and draws to the canvas
+        ctx.fillStyle = color;
+        console.log(event.offsetX, event.offsetY, brushSize, color)
+        ctx.fillRect(event.offsetX - (brushSize / 2), event.offsetY - (brushSize / 2), brushSize, brushSize);
+      }
+
+      // We need to know about the mouse, are they currently dragging?
+      let dragging = false;
+      window.addEventListener('mousedown', () => { dragging = true }); // Check if they click and drag
+      window.addEventListener('mouseup', () => { dragging = false }); // Check if they aren't clicking and dragging.
+      canvasElement.addEventListener('mousemove', e => { if (dragging) { console.log(e); draw(e) } }) // On mouse move, check if they are dragging, if they are, start drawing.
+      window.addEventListener('mouseleave', () => { dragging = false });
+
+
+      document.getElementById('download').addEventListener('click', () => {
+        const downloadLink = document.createElement('a'); // Create an HTML <a> element, for a link
+        downloadLink.download = 'painting.png'; // Set the name of a file downloaded from that link
+        downloadLink.href = canvasElement.toDataURL('image/png'); // Turn the canvas into a image file
+        document.body.appendChild(downloadLink); // add the link to the document because firefox doesn't let links that don't exist be clicked
+        downloadLink.click(); // Click the link to download
+        document.body.removeChild(downloadLink); // remove from the document
+      })
+
+
+    }
+    
+    const button = document.getElementById('button');
+    button.addEventListener('click', initCanvas); // Check if the button to add the canvas is added
+    
+  </script>
+
+  <!--The CSS styles-->
+  <style>
+    canvas {
+      border: .2em black dashed;
+    }
+
+    /* Just adding a border to the canvas */
+  </style>
+
+  <!-- A form adding that takes in the user's parameters -->
+  <form>
+    <label for="canvasSizeX">Canvas Width (px):</label><input id="canvasSizeX" name="canvasSizeX" min="1" max="1024" value="500" type="number">
+    <label for="canvasSizeY">Canvas Height (px):</label><input id="canvasSizeY" name="canvasSizeY" min="1" max="1024" value="500" type="number">
+    <button id="button" type="button">Create canvas!</button>
+  </form>
+
+  <!-- An element that will be filled in with the canvas later -->
+  <main id="canvasContainer">
+    <!--Intentionally empty-->
+  </main>
+
+  <!-- A hidden template that we can clone out of that contains the canvas. -->
+  <template id="canvasMaker">
+    <!-- The canvas the user draws on. -->
+    <canvas id="scribble" width="500"></canvas>
+
+    <!-- Where the user inputs the color o -->
+    <input id="color" type="color" value="black" />
+
+    <!-- Where the user slides to input the brush size.-->
+    <input id="brushSize" type="range" value="10" min="1" max="100" />
+    <button type="button" id="download">Download image!</button>
+  </template>
+</body>
+
+</html>
